@@ -106,12 +106,21 @@ export async function getHoldings(): Promise<ApiHoldings> {
   return apiRequest<ApiHoldings>("/api/v1/me/holdings");
 }
 
+export interface ApiCertificatesResponse {
+  mode: "BANK" | "CASH";
+  count: number;
+  total_shares: number;
+  certificates: ApiCertificate[];
+}
+
 export async function getCertificates(
   mode: "BANK" | "CASH"
 ): Promise<ApiCertificate[]> {
-  return apiRequest<ApiCertificate[]>(
+  const response = await apiRequest<ApiCertificatesResponse>(
     `/api/v1/me/certificates?mode=${mode}`
   );
+
+  return response.certificates;
 }
 
 export async function getCertificate(
