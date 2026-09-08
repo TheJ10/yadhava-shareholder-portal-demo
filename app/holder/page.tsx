@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { RequireAuth } from "@/components/Guards";
-import { depositTotals, maskMobile, memberTotalShares } from "@/lib/data";
+import { depositTotals, memberTotalShares } from "@/lib/data";
 import DepositCard from "@/components/DepositCard";
 
 export default function HolderPage() {
@@ -56,7 +56,7 @@ function HolderDetails() {
         <hr className="w-[38px] h-[2px] bg-gold border-none mb-[22px] opacity-85" />
         <div className="grid grid-cols-2 gap-x-3.5 gap-y-[18px]">
           <Field label="Folio Number" value={member.folio} />
-          <Field label="Mobile Number" value={maskMobile(member.mobile)} />
+          <Field label="Mobile Number" value={member.mobile} />
           <Field label="Area" value={member.area} />
           <Field label="Total Shares" value={total.toLocaleString("en-IN")} accent />
         </div>

@@ -26,10 +26,10 @@ function VerifyForm() {
     setError(false);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (digits.length !== 10) return;
-    const ok = requestOtp(digits);
+    const ok = await requestOtp(digits);
     if (ok) {
       router.push("/otp");
     } else {

@@ -1,95 +1,122 @@
-import { Company, DepositTotals, Deposit, Member } from "./types";
+import { Company, DepositTotals, Deposit, Member, Certificate } from "./types";
+import {
+  ApiCertificate,
+  getCertificate as getCertificateFromApi,
+  getCertificates,
+  getHolder,
+  getHoldings,
+} from "./api";
 
 /**
- * ---------------------------------------------------------------------------
- * DATA SOURCE NOTE
- * ---------------------------------------------------------------------------
- * Every field below is taken directly from the supplied source documents
- * (the Deposit-Bank and Deposit-Cash share certificate documents, and the
- * member record). Nothing here is invented. Share totals are calculated
- * from the certificate documents only, never from an external share-count
- * field.
+ * Static company information.
  *
- * This file is the ONLY place that should change when the real backend/API
- * is wired up. `getMemberByMobile` and `verifyOtp` are the seam: replace
- * their bodies with real network calls and nothing else in the app needs
- * to change, since every page/component calls through these two functions
- * (or the `useAuth` hook, which itself calls through them).
- * ---------------------------------------------------------------------------
+ * This is presentation metadata, not shareholder data, so it remains local.
  */
-
 export const COMPANY: Company = {
   name: "SRI NAVANEETHA KRISHNAR ENTERPRISES LIMITED",
   cin: "U74999TN2018PLC121690",
   office: "NO.19, YADAVA COMPLEX, VADIVEL NAGAR, G.N.T ROAD, CHENNAI-600052",
 };
 
-const MEMBERS: Record<string, Member> = {
-  "9876543210": {
-    name: "ARUL SEKAR",
-    folio: "SNK/0411",
-    mobile: "9876543210",
-    area: "SASTRI NAGAR",
+function formatCertificateDate(date: string): string {
+  const parsed = new Date(`${date}T00:00:00`);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return date;
+  }
+
+  return parsed.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function ordinal(day: number): string {
+  if (day >= 11 && day <= 13) return `${day}th`;
+
+  switch (day % 10) {
+    case 1:
+      return `${day}st`;
+    case 2:
+      return `${day}nd`;
+    case 3:
+      return `${day}rd`;
+    default:
+      return `${day}th`;
+  }
+}
+
+function formatCertificateDateSeal(date: string): string {
+  const parsed = new Date(`${date}T00:00:00`);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return date;
+  }
+
+  const day = parsed.getDate();
+
+  return `${ordinal(day)} day of ${parsed.toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric",
+  })}`;
+}
+
+function mapCertificate(
+  certificate: ApiCertificate,
+  holder: { unique_id: string; holder_name: string }
+): Certificate {
+  return {
+    certNo: certificate.certificate_no,
+    folio: holder.unique_id,
+    holder: holder.holder_name,
+    shares: certificate.number_of_shares,
+    distinctive: `${certificate.distinctive_from.toLocaleString("en-IN")} – ${certificate.distinctive_to.toLocaleString("en-IN")}`,
+    dateShort: formatCertificateDate(certificate.certificate_date),
+    dateSeal: formatCertificateDateSeal(certificate.certificate_date),
+  };
+}
+
+export async function getCurrentMember(): Promise<Member> {
+  const [holder, holdings] = await Promise.all([
+    getHolder(),
+    getHoldings(),
+  ]);
+
+  const [bankCertificates, cashCertificates] = await Promise.all([
+    getCertificates("BANK"),
+    getCertificates("CASH"),
+  ]);
+
+  return {
+    name: holder.holder_name,
+    folio: holder.unique_id,
+    mobile: holder.masked_mobile,
+    area: holder.place ?? "",
     deposits: {
       bank: {
-        label: "Deposit-Bank",
+        label: holdings.bank.label,
         tag: "Bank",
-        certificates: [
-          {
-            certNo: "508",
-            folio: "SNK/0411",
-            holder: "ARUL SEKAR",
-            shares: 5000,
-            distinctive: "4227501 – 4232500",
-            dateShort: "27 March 2019",
-            dateSeal: "27th day of March 2019",
-          },
-          {
-            certNo: "660",
-            folio: "SNK/0411",
-            holder: "ARUL SEKAR",
-            shares: 2000,
-            distinctive: "5500901 – 5502900",
-            dateShort: "18 January 2020",
-            dateSeal: "18th day of January 2020",
-          },
-          {
-            certNo: "707",
-            folio: "SNK/0411",
-            holder: "ARUL SEKAR",
-            shares: 2000,
-            distinctive: "5790901 – 5792900",
-            dateShort: "18 January 2020",
-            dateSeal: "18th day of January 2020",
-          },
-        ],
+        certificates: bankCertificates.map((certificate) =>
+          mapCertificate(certificate, holder)
+        ),
       },
       cash: {
-        label: "Deposit-Cash",
+        label: holdings.cash.label,
         tag: "Cash",
-        certificates: [
-          {
-            certNo: "105",
-            folio: "SNK/0411",
-            holder: "ARUL SEKAR",
-            shares: 1000,
-            distinctive: "401501 – 402500",
-            dateShort: "31 March 2019",
-            dateSeal: "31th day of March 2019",
-          },
-        ],
+        certificates: cashCertificates.map((certificate) =>
+          mapCertificate(certificate, holder)
+        ),
       },
     },
-  },
-};
+  };
+}
 
-/** Demo OTP used for every registered member in this local dataset. */
-const VALID_OTP = "123456";
-
-/** Sum shares/certificates for a deposit — always derived from certificates[], never a stored total. */
 export function depositTotals(dep: Deposit): DepositTotals {
   return {
-    shares: dep.certificates.reduce((sum, c) => sum + c.shares, 0),
+    shares: dep.certificates.reduce((sum, certificate) => {
+      return sum + certificate.shares;
+    }, 0),
     count: dep.certificates.length,
   };
 }
@@ -101,33 +128,38 @@ export function memberTotalShares(member: Member): number {
   );
 }
 
-/**
- * Lookup seam — swap this for `await fetch('/api/members/' + mobile)` when a
- * real backend exists. Everything else in the app is unaffected.
- */
-export function getMemberByMobile(mobile: string): Member | null {
-  return MEMBERS[mobile] ?? null;
-}
-
-/**
- * OTP verification seam — swap for a real SMS/OTP provider call.
- */
-export function verifyOtp(mobile: string, otp: string): boolean {
-  return Boolean(MEMBERS[mobile]) && otp === VALID_OTP;
-}
-
 export function maskMobile(mobile: string): string {
+  if (!mobile) return "";
+
   return mobile.slice(0, 2) + "••••••" + mobile.slice(-2);
 }
 
-export function getDeposit(member: Member, type: "bank" | "cash"): Deposit {
+export function getDeposit(
+  member: Member,
+  type: "bank" | "cash"
+): Deposit {
   return member.deposits[type];
 }
 
-export function getCertificate(
+export async function getCertificate(
   member: Member,
   type: "bank" | "cash",
   certNo: string
-) {
-  return member.deposits[type].certificates.find((c) => c.certNo === certNo) ?? null;
+): Promise<Certificate | null> {
+  try {
+    const certificate = await getCertificateFromApi(certNo);
+
+    const expectedMode = type === "bank" ? "BANK" : "CASH";
+
+    if (certificate.transaction_mode !== expectedMode) {
+      return null;
+    }
+
+    return mapCertificate(certificate, {
+      unique_id: member.folio,
+      holder_name: member.name,
+    });
+  } catch {
+    return null;
+  }
 }
