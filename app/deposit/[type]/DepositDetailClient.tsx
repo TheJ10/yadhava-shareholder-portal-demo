@@ -22,12 +22,13 @@ function DepositDetail({ type }: { type: DepositType }) {
   const dep = getDeposit(member, type);
   const totals = depositTotals(dep);
   const titleColor = type === "bank" ? "text-bank-deep" : "text-cash-deep";
-
+  const displayTitle = type === "bank" ? "Initial Deposit" : "Post Deposit";
+  
   return (
     <div className="animate-fadeIn">
       <BackLink href="/holder" label="Holder Details" />
       <h2 className={`font-serif font-bold text-[25px] tracking-wide mb-1 ${titleColor}`}>
-        {dep.label}
+        {displayTitle}
       </h2>
       <p className="text-[11.5px] tracking-wide uppercase text-ink-faint font-semibold mb-5">
         {totals.count} {totals.count === 1 ? "certificate" : "certificates"} ·{" "}

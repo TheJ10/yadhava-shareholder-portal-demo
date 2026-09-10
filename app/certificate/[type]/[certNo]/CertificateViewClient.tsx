@@ -43,7 +43,8 @@ function CertificateView({
   const autoDownloadHandled = useRef(false);
 
   const dep = member ? getDeposit(member, type) : null;
-
+  const displayTitle = type === "bank" ? "Initial Deposit" : "Post Deposit";
+  
   useEffect(() => {
     if (!member) return;
 
@@ -80,7 +81,7 @@ function CertificateView({
     try {
       await downloadCertificateNode(
         captureRef.current,
-        `Yadhava_Certificate_${cert.certNo}_${member.name.replace(/\s+/g, "_")}.png`
+        `SNK_Certificate_${cert.certNo}_${member.name.replace(/\s+/g, "_")}.png`
       );
 
       showToast("Certificate downloaded");
@@ -115,7 +116,7 @@ function CertificateView({
   if (loading) {
     return (
       <div className="animate-fadeIn">
-        <BackLink href={`/deposit/${type}`} label={dep.label} />
+        <BackLink href={`/deposit/${type}`} label={displayTitle} />
         <p className="text-ink-soft text-[14px]">
           Loading certificate…
         </p>
@@ -126,7 +127,7 @@ function CertificateView({
   if (!cert) {
     return (
       <div className="animate-fadeIn">
-        <BackLink href={`/deposit/${type}`} label={dep.label} />
+        <BackLink href={`/deposit/${type}`} label={displayTitle} />
         <p className="text-ink-soft text-[14px]">
           Certificate not found.
         </p>
@@ -136,14 +137,14 @@ function CertificateView({
 
   return (
     <div className="animate-fadeIn">
-      <BackLink href={`/deposit/${type}`} label={dep.label} />
+      <BackLink href={`/deposit/${type}`} label={displayTitle} />
 
       <div ref={captureRef}>
         <CertificateReplica cert={cert} company={COMPANY} />
       </div>
 
       <p className="mt-[18px] text-[11.5px] text-ink-faint text-center leading-relaxed">
-        Deposit method: {dep.tag}
+        Deposit type: {displayTitle}
       </p>
 
       <button
