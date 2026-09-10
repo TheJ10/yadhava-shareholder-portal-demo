@@ -32,7 +32,7 @@ export default function Header() {
           <span className="relative flex items-center justify-center rounded-full overflow-hidden shrink-0 w-9 h-9 sm:w-11 sm:h-11">
             <Image
               src="/krishna-logo.png"
-              alt="Yadhava Convention Hall emblem"
+              alt="Sri Navaneetha Krishnar Enterprises Limited emblem"
               fill
               sizes="44px"
               className="object-cover"
@@ -40,8 +40,9 @@ export default function Header() {
             />
           </span>
 
-          <span className="font-serif font-bold text-gold-soft tracking-wide text-[20px] sm:text-[26px] whitespace-nowrap">
-            Yadhava Convention Hall
+          <span className="font-serif font-bold text-gold-soft tracking-wide text-[15px] sm:text-[20px] leading-tight text-center">
+            SRI NAVANEETHA KRISHNAR
+            <span className="block">ENTERPRISES LIMITED</span>
           </span>
         </Link>
 

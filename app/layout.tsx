@@ -14,8 +14,8 @@ import Header, { HEADER_HEIGHT } from "@/components/Header";
 import KrishnaWatermark from "@/components/KrishnaWatermark";
 
 export const metadata: Metadata = {
-  title: "Yadhava Convention Hall — Shareholder Portal",
-  description: "Shareholder Portal for Yadhava Convention Hall.",
+  title: "SRI NAVANEETHA KRISHNAR ENTERPRISES LIMITED — Shareholder Portal",
+  description: "Shareholder Portal for Sri Navaneetha Krishnar Enterprises Limited.",
 };
 
 export const viewport: Viewport = {
@@ -39,7 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               <main className="flex-1 px-[18px] pt-[26px] pb-[60px]">{children}</main>
               <footer className="text-center px-5 pt-4 pb-[30px] text-[10.5px] tracking-wide text-ink-faint relative z-10">
-                Private shareholder access · Yadhava Convention Hall
+                Private shareholder access · SRI NAVANEETHA KRISHNAR ENTERPRISES LIMITED
               </footer>
             </div>
           </ToastProvider>
